@@ -1,152 +1,128 @@
-import { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useState } from 'react';
+import Planeta from './Planeta';
 
-interface Planeta {
-  nome: string;
-  cor: string;
-  anel: boolean;
-  x: number;
-  y: number;
-  raio: number;
-}
-
-interface GameProps {
-  voltarMenu: () => void;
-}
-
-const planetasData = [
-  { nome: 'Mercury', cor: '#a8a8a8', anel: false },
-  { nome: 'Venus', cor: '#ffcc66', anel: false },
-  { nome: 'Earth', cor: '#64b5f6', anel: false },
-  { nome: 'Mars', cor: '#f66', anel: false },
-  { nome: 'Jupiter', cor: '#e0b084', anel: true },
-  { nome: 'Saturn', cor: '#eddc8b', anel: true },
-  { nome: 'Uranus', cor: '#96d6ff', anel: true },
-  { nome: 'Neptune', cor: '#6495ed', anel: true },
-  { nome: 'Pluto', cor: '#ccc', anel: false },
+const PLANETAS = [
+  { nome: 'Planeta 1', x: 300, y: 300, raio: 50 },
+  { nome: 'Planeta 2', x: 700, y: 200, raio: 60 },
+  { nome: 'Planeta 3', x: 500, y: 500, raio: 70 },
+  { nome: 'Final', x: 900, y: 300, raio: 80 },
 ];
 
-export default function Game({ voltarMenu }: GameProps) {
-  const [planetas, setPlanetas] = useState<Planeta[]>([]);
-  const [tempo, setTempo] = useState(180);
+const Game: React.FC = () => {
+  const [emOrbita, setEmOrbita] = useState(true);
+  const [planetaAtual, setPlanetaAtual] = useState(0);
+  const [angulo, setAngulo] = useState(0);
+  const [pos, setPos] = useState({ x: PLANETAS[0].x + PLANETAS[0].raio + 10, y: PLANETAS[0].y });
+  const [vel, setVel] = useState({ x: 0, y: 0 });
   const [saltos, setSaltos] = useState(0);
   const [gameOver, setGameOver] = useState(false);
-  const [satellitePos, setSatellitePos] = useState({ x: 100, y: 100 });
-  const [angulo, setAngulo] = useState(0);
-
-  const canvasRef = useRef<HTMLCanvasElement | null>(null);
+  const [vitoria, setVitoria] = useState(false);
 
   useEffect(() => {
-    gerarPlanetas();
-    const loop = setInterval(() => setTempo((t) => (t > 0 ? t - 1 : 0)), 1000);
-    return () => clearInterval(loop);
-  }, []);
-
-  useEffect(() => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-    const ctx = canvas.getContext('2d');
-    if (!ctx) return;
-
-    ctx.imageSmoothingEnabled = true;
-
-    function desenhar() {
-      if (!ctx || !canvas) return;
-
-      // Limpando o canvas
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-      // Desenhando fundo
-      ctx.fillStyle = 'black';
-      ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-      // Desenhando planetas
-      planetas.forEach((p) => desenharPlaneta(ctx, p));
-
-      // Desenhando o HUD
-      desenharHUD(ctx);
-
-      // Desenhando game over
-      if (gameOver) desenharGameOver(ctx);
-
-      requestAnimationFrame(desenhar);
-    }
-
-    desenhar();
-  }, [planetas, tempo, saltos, gameOver]);
-
-  function desenharPlaneta(ctx: CanvasRenderingContext2D, p: Planeta) {
-    ctx.beginPath();
-    ctx.fillStyle = p.cor;
-    ctx.arc(p.x, p.y, p.raio, 0, Math.PI * 2);
-    ctx.fill();
-    if (p.anel) {
-      ctx.strokeStyle = 'rgba(255,255,255,0.3)';
-      ctx.lineWidth = 2;
-      ctx.beginPath();
-      ctx.ellipse(p.x, p.y, p.raio * 1.5, p.raio * 0.7, 0, 0, Math.PI * 2);
-      ctx.stroke();
-    }
-    ctx.fillStyle = '#fff';
-    ctx.font = '12px Courier';
-    ctx.textAlign = 'center';
-    ctx.fillText(p.nome, p.x, p.y - p.raio - 10);
-  }
-
-  function desenharHUD(ctx: CanvasRenderingContext2D) {
-    ctx.fillStyle = '#fff';
-    ctx.font = '18px Courier';
-    ctx.textAlign = 'left';
-    ctx.fillText(`🛰 Saltos: ${saltos}`, 20, 30);
-    ctx.fillText(`⏱ Tempo: ${tempo}s`, 20, 60);
-  }
-
-  function desenharGameOver(ctx: CanvasRenderingContext2D) {
-    ctx.fillStyle = 'rgba(0,0,0,0.6)';
-    ctx.fillRect(0, 0, 800, 600);
-    ctx.fillStyle = '#fff';
-    ctx.textAlign = 'center';
-    ctx.font = '32px Courier';
-    ctx.fillText('🚀 Fim de Jogo 🚀', 400, 250);
-    ctx.font = '20px Courier';
-    ctx.fillText(`Saltos: ${saltos}`, 400, 300);
-    ctx.fillText(`Tempo Restante: ${tempo}s`, 400, 340);
-    ctx.fillText('Pressione Enter para voltar ao menu', 400, 400);
-  }
-
-  function gerarPlanetas() {
-    const lista: Planeta[] = [];
-    let x = 150;
-    for (let i = 0; i < planetasData.length; i++) {
-      const info = planetasData[i];
-      const y = Math.random() * 300 + 150;
-      const raio = 40 + i * 2;
-      lista.push({ ...info, x, y, raio });
-      x += 180;
-    }
-    setPlanetas(lista);
-  }
-
-  function handleKeyDown(e: KeyboardEvent) {
-    if (e.key === 'Enter' && gameOver) voltarMenu(); // Volta para o menu ao pressionar Enter
-    if (e.key === ' ') realizarPulo();
-  }
-
-  function realizarPulo() {
-    if (gameOver) return;
-    setSaltos((prev) => prev + 1);
-    if (saltos + 1 >= planetas.length) {
-      setGameOver(true);
-    }
-  }
-
-  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.code === 'Space' && emOrbita && !gameOver && !vitoria) {
+        const velocidade = 5;
+        const vx = -Math.sin(angulo) * velocidade;
+        const vy = Math.cos(angulo) * velocidade;
+        setVel({ x: vx, y: vy });
+        setEmOrbita(false);
+        setSaltos(s => s + 1);
+      }
+    };
     window.addEventListener('keydown', handleKeyDown);
+
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [saltos, gameOver]);
+  }, [angulo, emOrbita, gameOver, vitoria]);
+
+  useEffect(() => {
+    let animationId: number;
+
+    const update = () => {
+      const planeta = PLANETAS[planetaAtual];
+
+      if (emOrbita) {
+        const novoAngulo = angulo + 0.02;
+        const raioOrbita = planeta.raio + 10;
+        const x = planeta.x + Math.cos(novoAngulo) * raioOrbita;
+        const y = planeta.y + Math.sin(novoAngulo) * raioOrbita;
+        setAngulo(novoAngulo);
+        setPos({ x, y });
+      } else {
+        const novaX = pos.x + vel.x;
+        const novaY = pos.y + vel.y;
+        let colidiu = false;
+
+        for (let i = 0; i < PLANETAS.length; i++) {
+          const p = PLANETAS[i];
+          const dx = novaX - p.x;
+          const dy = novaY - p.y;
+          const dist = Math.sqrt(dx * dx + dy * dy);
+          if (dist < p.raio + 5) {
+            setPlanetaAtual(i);
+            setEmOrbita(true);
+            setAngulo(0);
+            colidiu = true;
+            if (p.nome === 'Final') setVitoria(true);
+            break;
+          }
+        }
+
+        if (!colidiu) {
+          setPos({ x: novaX, y: novaY });
+          if (novaX < 0 || novaX > 1000 || novaY < 0 || novaY > 600) {
+            setGameOver(true);
+          }
+        }
+      }
+
+      animationId = requestAnimationFrame(update);
+    };
+
+    animationId = requestAnimationFrame(update);
+    return () => cancelAnimationFrame(animationId);
+  }, [emOrbita, pos, vel, angulo, planetaAtual, gameOver, vitoria]);
 
   return (
-    <div className="w-screen h-screen bg-black overflow-hidden flex items-center justify-center">
-      <canvas ref={canvasRef} width={800} height={600} className="rounded-xl shadow-xl" />
+    <div style={{ position: 'relative', width: 1000, height: 600, background: 'black', overflow: 'hidden' }}>
+      {/* Fundo de estrelas */}
+      {[...Array(100)].map((_, i) => (
+        <div
+          key={i}
+          style={{
+            position: 'absolute',
+            top: Math.random() * 600,
+            left: Math.random() * 1000,
+            width: 2,
+            height: 2,
+            backgroundColor: 'white',
+          }}
+        />
+      ))}
+
+      {/* Planetass */}
+      {PLANETAS.map((p, index) => (
+        <Planeta key={index} planeta={p} />
+      ))}
+
+      {/* Satélite */}
+      <div
+        style={{
+          position: 'absolute',
+          top: pos.y - 5,
+          left: pos.x - 5,
+          width: 10,
+          height: 10,
+          backgroundColor: 'white',
+          borderRadius: '50%',
+        }}
+      />
+
+      {/* HUD */}
+      <div style={{ color: 'white', position: 'absolute', top: 10, left: 10 }}>
+        Saltos: {saltos} {gameOver && ' | GAME OVER'} {vitoria && ' | CHEGOU AO FINAL!'}
+      </div>
     </div>
   );
-}
+};
+
+export default Game;
