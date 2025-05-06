@@ -27,26 +27,29 @@ export default function Planeta({ x, y, raio, cor, anel = false, nome = '', visi
     ctx.save();
     ctx.translate(canvas.width / 2, canvas.height / 2);
 
-    // planeta principal
-    ctx.fillStyle = cor;
+    // efeito de brilho
+    const gradient = ctx.createRadialGradient(0, 0, raio * 0.2, 0, 0, raio);
+    gradient.addColorStop(0, 'white');
+    gradient.addColorStop(1, cor);
+    ctx.fillStyle = gradient;
     ctx.beginPath();
     ctx.arc(0, 0, raio, 0, Math.PI * 2);
     ctx.fill();
 
-    // anel
+    // anel (se tiver)
     if (anel) {
-      ctx.strokeStyle = 'rgba(255,255,255,0.3)';
+      ctx.strokeStyle = 'rgba(255,255,255,0.4)';
       ctx.lineWidth = 4;
       ctx.beginPath();
-      ctx.ellipse(0, 0, raio * 1.5, raio * 0.6, 0, 0, Math.PI * 2);
+      ctx.ellipse(0, 0, raio * 1.6, raio * 0.6, 0, 0, Math.PI * 2);
       ctx.stroke();
     }
 
     // nome
     ctx.fillStyle = '#ffffffcc';
-    ctx.font = '12px Courier';
+    ctx.font = 'bold 13px Courier';
     ctx.textAlign = 'center';
-    ctx.fillText(nome, 0, -raio - 10);
+    ctx.fillText(nome, 0, -raio - 14);
 
     ctx.restore();
   }, [x, y, raio, cor, anel, nome, visivel]);
