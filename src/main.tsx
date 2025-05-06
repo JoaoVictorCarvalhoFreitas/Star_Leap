@@ -1,13 +1,18 @@
-import { StrictMode } from 'react'
-import { createRoot } from 'react-dom/client'
-import App from './App'
-import './index.css';
+import React from 'react';
+import { createRoot } from 'react-dom/client';
+import App from './App';
+import './index.css'; // Importa estilos globais do Tailwind ou CSS customizado
 
-const rootElement = document.getElementById('root')
+// Seleciona o elemento root no HTML
+const rootElement = document.getElementById('root');
+
 if (rootElement) {
-  createRoot(rootElement).render(
-    <StrictMode>
+  const root = createRoot(rootElement);
+  root.render(
+    <React.StrictMode>
       <App />
-    </StrictMode>
-  )
+    </React.StrictMode>
+  );
+} else {
+  console.error('Elemento #root não encontrado no HTML.');
 }

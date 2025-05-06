@@ -31,33 +31,70 @@ export default function Hud({ tempo, saltos, gameOver, vitoria }: HudProps) {
     setPiscando(tempoRestante <= 15);
   }, [tempoRestante]);
 
+  const containerStyle: React.CSSProperties = {
+    position: 'absolute',
+    top: '20px',
+    left: '20px',
+    zIndex: 50,
+    borderRadius: '12px',
+    border: '1px solid rgba(255, 255, 255, 0.3)',
+    backgroundColor: 'rgba(0, 0, 0, 0.7)',
+    color: 'white',
+    backdropFilter: 'blur(4px)',
+    maxWidth: '240px',
+    padding: '16px 20px',
+    fontFamily: 'sans-serif',
+    boxShadow: '0 0 20px rgba(0,0,0,0.4)',
+  };
+
+  const labelStyle: React.CSSProperties = {
+    fontWeight: 600,
+    textShadow: '0 1px 3px rgba(0,0,0,0.8)',
+    marginBottom: '8px',
+    fontSize: '15px',
+  };
+
+  const valorStyle: React.CSSProperties = {
+    fontWeight: 700,
+    color: '#38bdf8',
+    marginLeft: '5px',
+  };
+
+  const tempoStyle: React.CSSProperties = {
+    ...labelStyle,
+    color: piscando ? '#f87171' : '#6ee7b7',
+    animation: piscando ? 'pulse 1s infinite' : 'none',
+  };
+
+  const barraExterna: React.CSSProperties = {
+    width: '100%',
+    height: '8px',
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    borderRadius: '10px',
+    overflow: 'hidden',
+    marginTop: '10px',
+  };
+
+  const barraInterna: React.CSSProperties = {
+    height: '100%',
+    background: 'linear-gradient(to right, #60a5fa, #06b6d4)',
+    width: `${(tempoRestante / 180) * 100}%`,
+    transition: 'width 0.5s ease',
+  };
+
   return (
-    <div
-      className="absolute top-6 left-6 z-50 rounded-xl border border-white/30 shadow-xl"
-      style={{
-        backgroundColor: 'rgba(0, 0, 0, 0.7)',
-        color: 'white',
-        backdropFilter: 'blur(4px)',
-        maxWidth: '240px',
-        padding: '16px 20px',
-      }}
-    >
-      <div className="flex flex-col gap-3 text-base leading-tight">
-        <p className="font-semibold drop-shadow">
-          Saltos: <span className="text-blue-300 font-bold">{saltos}</span>
+    <div style={containerStyle}>
+      <div>
+        <p style={labelStyle}>
+          Saltos:
+          <span style={valorStyle}>{saltos}</span>
         </p>
-        <p
-          className={`font-semibold drop-shadow ${
-            piscando ? 'text-red-400 animate-pulse' : 'text-green-300'
-          }`}
-        >
-          Tempo: <span className="font-bold">{tempoRestante}s</span>
+        <p style={tempoStyle}>
+          Tempo:
+          <span style={{ fontWeight: 700, marginLeft: '5px' }}>{tempoRestante}s</span>
         </p>
-        <div className="w-full h-2 bg-white/20 rounded-full overflow-hidden mt-2">
-          <div
-            className="h-full bg-gradient-to-r from-blue-400 to-cyan-300 transition-all duration-500"
-            style={{ width: `${(tempoRestante / 180) * 100}%` }}
-          />
+        <div style={barraExterna}>
+          <div style={barraInterna}></div>
         </div>
       </div>
     </div>

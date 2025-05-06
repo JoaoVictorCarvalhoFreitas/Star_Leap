@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import Planeta from './Planeta';
 import Satelite from './Satelite';
 import Hud from './Hud';
@@ -8,7 +8,7 @@ import Estrela from './Estrela';
 interface GameProps {
   dificuldade: string;
   voltarMenu: () => void;
-  encerrar: () => void;
+  encerrar: (tempoRestante: number, saltos: number, gameOver: boolean) => void;
 }
 
 const PLANETAS = [
@@ -36,35 +36,113 @@ const Game: React.FC<GameProps> = ({ dificuldade, voltarMenu, encerrar }) => {
   const [vitoria, setVitoria] = useState(false);
   const [cameraX, setCameraX] = useState(0);
 
+  const contextRef = useRef<AudioContext | null>(null);
+  const buffersRef = useRef<Record<string, AudioBuffer>>({});
+  const loopedSounds = useRef<Record<string, AudioBufferSourceNode | null>>({ ambient: null, vitoria: null });
+
+  const playSound = (name: string, volume = 1, loop = false) => {
+    const context = contextRef.current;
+    const buffer = buffersRef.current[name];
+    if (!context || !buffer) return;
+
+    const source = context.createBufferSource();
+    const gain = context.createGain();
+    source.buffer = buffer;
+    source.loop = loop;
+    gain.gain.value = volume;
+
+    source.connect(gain);
+    gain.connect(context.destination);
+    source.start(0);
+
+    if (loop) {
+      loopedSounds.current[name]?.stop();
+      loopedSounds.current[name] = source;
+    }
+  };
+
+  const resetarAudioContext = () => {
+    const context = contextRef.current;
+    if (context && context.state !== 'closed') {
+      context.close();
+    }
+    contextRef.current = null;
+    loopedSounds.current = { ambient: null, vitoria: null };
+  };
+
+  useEffect(() => {
+    const loadAllSounds = async () => {
+      if (!contextRef.current || contextRef.current.state === 'closed') {
+        contextRef.current = new AudioContext();
+      }
+      const context = contextRef.current;
+
+      const loadSound = async (name: string, url: string) => {
+        const res = await fetch(url);
+        const arrayBuffer = await res.arrayBuffer();
+        const buffer = await context.decodeAudioData(arrayBuffer);
+        buffersRef.current[name] = buffer;
+      };
+
+      await Promise.all([
+        loadSound('jump', '/sounds/jump.mp3'),
+        loadSound('gameover', '/sounds/gameover.mp3'),
+        loadSound('ambient', '/sounds/space.mp3'),
+        loadSound('vitoria', '/sounds/vitoria.mp3')
+      ]);
+
+      playSound('ambient', 0.3, true);
+    };
+
+    loadAllSounds();
+    return () => {
+      resetarAudioContext();
+    };
+  }, []);
+
+  useEffect(() => {
+    if (vitoria && !gameOver) playSound('vitoria', 0.7, true);
+  }, [vitoria, gameOver]);
+
+  const handleDisparo = () => {
+    if (emOrbita && !gameOver && !vitoria) {
+      playSound('jump', 0.9);
+      const velocidade = 5;
+      const vx = -Math.sin(angulo) * velocidade;
+      const vy = Math.cos(angulo) * velocidade;
+      setVel({ x: vx, y: vy });
+      setEmOrbita(false);
+      setSaltos(s => s + 1);
+    }
+  };
+
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.code === 'Space' && emOrbita && !gameOver && !vitoria) {
-        const velocidade = 5;
-        const vx = -Math.sin(angulo) * velocidade;
-        const vy = Math.cos(angulo) * velocidade;
-        setVel({ x: vx, y: vy });
-        setEmOrbita(false);
-        setSaltos(s => s + 1);
-      }
+      if (e.code === 'Space') handleDisparo();
     };
+    const handleMouseDown = () => handleDisparo();
+
     window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
+    window.addEventListener('mousedown', handleMouseDown);
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+      window.removeEventListener('mousedown', handleMouseDown);
+    };
   }, [angulo, emOrbita, gameOver, vitoria]);
 
   useEffect(() => {
     if (gameOver || vitoria) return;
-
     const intervalo = setInterval(() => {
       setTempo(prev => {
         if (prev <= 1) {
           clearInterval(intervalo);
+          playSound('gameover');
           setGameOver(true);
           return 0;
         }
         return prev - 1;
       });
     }, 1000);
-
     return () => clearInterval(intervalo);
   }, [gameOver, vitoria]);
 
@@ -95,14 +173,19 @@ const Game: React.FC<GameProps> = ({ dificuldade, voltarMenu, encerrar }) => {
             setEmOrbita(true);
             setAngulo(0);
             colidiu = true;
-            if (p.nome === 'Zorion') setVitoria(true);
+            if (p.nome === 'Zorion') {
+              setVitoria(true);
+            }
             break;
           }
         }
 
         if (!colidiu) {
           setPos({ x: novaX, y: novaY });
-          if (novaX < 0 || novaY < 0 || novaY > 600) setGameOver(true);
+          if (novaX < 0 || novaY < 0 || novaY > 580) {
+            playSound('gameover');
+            setGameOver(true);
+          }
         }
       }
 
@@ -115,45 +198,76 @@ const Game: React.FC<GameProps> = ({ dificuldade, voltarMenu, encerrar }) => {
   }, [emOrbita, pos, vel, angulo, planetaAtual, gameOver, vitoria]);
 
   useEffect(() => {
-    if (gameOver) {
-      const timeout = setTimeout(() => encerrar(), 3000);
+    if (vitoria || gameOver) {
+      const timeout = setTimeout(() => encerrar(tempo, saltos, gameOver), 6000);
       return () => clearTimeout(timeout);
     }
-  }, [gameOver]);
+  }, [vitoria, gameOver]);
+
+  const mostrarCreditos = vitoria || gameOver;
 
   return (
-    <div style={{ position: 'relative', width: '1000px', height: '600px', overflow: 'hidden', background: 'black' }}>
-      <div
-        style={{
-          transform: `translateX(${-cameraX}px)`,
-          position: 'absolute',
-          width: '3000px',
-          height: '600px',
-        }}
-      >
-        <Estrela quantidade={150} largura={3000} altura={600} />
-        {PLANETAS.map((p, index) => (
-          <Planeta key={index} x={p.x} y={p.y} raio={p.raio} cor={p.cor} nome={p.nome} anel={p.anel} visivel={true} />
-        ))}
-        <Satelite
-          x={pos.x}
-          y={pos.y}
-          angulo={angulo}
-          emOrbita={emOrbita}
-          onColidir={() => setGameOver(true)}
-          emMovimento={!emOrbita}
-        />
-      </div>
+    <div
+      style={{
+        position: 'relative',
+        width: '99vw',
+        height: '97.7vh',
+        overflow: 'hidden',
+        background: 'black',
+        fontFamily: 'sans-serif'
+      }}
+    >
+      {!mostrarCreditos && (
+        <>
+          <div
+            style={{
+              transform: `translateX(${-cameraX}px)`,
+              position: 'absolute',
+              width: '3000px',
+              height: '97.7vh',
+            }}
+          >
+            <Estrela quantidade={160} />
+            {PLANETAS.map((p, index) => (
+              <Planeta
+                key={index}
+                x={p.x}
+                y={p.y}
+                raio={p.raio}
+                cor={p.cor}
+                nome={p.nome}
+                anel={p.anel}
+                visivel={true}
+              />
+            ))}
+            <Satelite
+              x={pos.x}
+              y={pos.y}
+              angulo={angulo}
+              emOrbita={emOrbita}
+              onColidir={() => {
+                playSound('gameover');
+                setGameOver(true);
+              }}
+              emMovimento={!emOrbita}
+            />
+          </div>
 
-      <Hud tempo={tempo} saltos={saltos} gameOver={gameOver} vitoria={vitoria} />
-
-      {gameOver && (
-        <div className="absolute inset-0 z-50 bg-black/90 flex items-center justify-center">
-          <p className="text-red-500 text-5xl font-bold animate-pulse">🚨 GAME OVER 🚨</p>
-        </div>
+          <Hud tempo={tempo} saltos={saltos} gameOver={gameOver} vitoria={vitoria} />
+        </>
       )}
 
-      {vitoria && <Creditos voltar={voltarMenu} />}
+      {mostrarCreditos && (
+        <Creditos
+          voltar={() => {
+            resetarAudioContext();
+            setTimeout(() => voltarMenu(), 100);
+          }}
+          tempoRestante={tempo}
+          saltos={saltos}
+          gameOver={gameOver}
+        />
+      )}
     </div>
   );
 };
