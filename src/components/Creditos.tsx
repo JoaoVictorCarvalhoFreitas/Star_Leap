@@ -1,5 +1,5 @@
-import { useEffect } from 'react';
-import { motion } from 'framer-motion';
+import { useEffect } from "react";
+import { motion } from "framer-motion";
 
 interface CreditosProps {
   voltar: () => void;
@@ -8,34 +8,44 @@ interface CreditosProps {
   gameOver?: boolean;
 }
 
-export default function Creditos({ voltar, tempoRestante, saltos, gameOver = false }: CreditosProps) {
+export default function Creditos({
+  voltar,
+  tempoRestante,
+  saltos,
+  gameOver = false,
+}: CreditosProps) {
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Enter') {
+      if (e.key === "Enter") {
         pararTodosAudios();
         voltar();
       }
     };
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
   }, [voltar]);
 
   const pararTodosAudios = () => {
-    if (typeof window !== 'undefined') {
-      const audios = document.querySelectorAll('audio');
-      audios.forEach(audio => {
+    if (typeof window !== "undefined") {
+      const audios = document.querySelectorAll("audio");
+      audios.forEach((audio) => {
         audio.pause();
         audio.currentTime = 0;
       });
 
-      const globalCtx = (window as any)._globalAudioContext as AudioContext | undefined;
-      if (globalCtx && globalCtx.state !== 'closed') {
+      const globalCtx = (window as any)._globalAudioContext as
+        | AudioContext
+        | undefined;
+      if (globalCtx && globalCtx.state !== "closed") {
         globalCtx.close();
         (window as any)._globalAudioContext = undefined;
       }
 
       if ((window as any)._loopedSounds) {
-        const sounds = (window as any)._loopedSounds as Record<string, AudioBufferSourceNode | null>;
+        const sounds = (window as any)._loopedSounds as Record<
+          string,
+          AudioBufferSourceNode | null
+        >;
         Object.keys(sounds).forEach((key) => {
           try {
             sounds[key]?.stop();
@@ -50,51 +60,51 @@ export default function Creditos({ voltar, tempoRestante, saltos, gameOver = fal
 
   const styles = {
     container: {
-      width: '99vw',
-      height: '97.7vh',
-      background: 'linear-gradient(to bottom, #000000, #1f2937, #000000)',
-      display: 'flex',
-      flexDirection: 'column' as const,
-      alignItems: 'center',
-      justifyContent: 'center',
-      color: 'white',
-      textAlign: 'center' as const,
-      fontFamily: 'sans-serif',
+      width: "99vw",
+      height: "97.7vh",
+      background: "linear-gradient(to bottom, #000000, #1f2937, #000000)",
+      display: "flex",
+      flexDirection: "column" as const,
+      alignItems: "center",
+      justifyContent: "center",
+      color: "white",
+      textAlign: "center" as const,
+      fontFamily: "sans-serif",
     },
     title: {
-      fontSize: '3.5rem',
+      fontSize: "3.5rem",
       fontWeight: 800,
-      marginBottom: '2rem',
-      background: 'linear-gradient(to right, #06b6d4, #a855f7)',
-      WebkitBackgroundClip: 'text',
-      WebkitTextFillColor: 'transparent',
+      marginBottom: "2rem",
+      background: "linear-gradient(to right, #06b6d4, #a855f7)",
+      WebkitBackgroundClip: "text",
+      WebkitTextFillColor: "transparent",
     },
     content: {
-      fontSize: '1.2rem',
-      lineHeight: '2rem',
-      marginBottom: '2rem',
+      fontSize: "1.2rem",
+      lineHeight: "2rem",
+      marginBottom: "2rem",
     },
     highlight: (color: string) => ({
       color,
       fontWeight: 600,
     }),
     score: {
-      fontSize: '1.8rem',
+      fontSize: "1.8rem",
       fontWeight: 700,
-      color: gameOver ? '#ef4444' : '#facc15',
-      marginBottom: '3rem',
+      color: gameOver ? "#ef4444" : "#facc15",
+      marginBottom: "3rem",
     },
     button: {
-      padding: '12px 24px',
-      fontSize: '1rem',
-      fontWeight: 'bold' as const,
-      background: '#ffffff',
-      color: '#000',
-      borderRadius: '12px',
-      boxShadow: '0 4px 10px rgba(0,0,0,0.4)',
-      border: 'none',
-      cursor: 'pointer',
-      transition: 'transform 0.2s, background 0.3s',
+      padding: "12px 24px",
+      fontSize: "1rem",
+      fontWeight: "bold" as const,
+      background: "#ffffff",
+      color: "#000",
+      borderRadius: "12px",
+      boxShadow: "0 4px 10px rgba(0,0,0,0.4)",
+      border: "none",
+      cursor: "pointer",
+      transition: "transform 0.2s, background 0.3s",
     },
   };
 
@@ -116,16 +126,22 @@ export default function Creditos({ voltar, tempoRestante, saltos, gameOver = fal
         transition={{ delay: 0.5, duration: 1 }}
       >
         <p>
-          Desenvolvido por <span style={styles.highlight('#3b82f6')}>Matheus Brehm</span>
+          Desenvolvido por{" "}
+          <span style={styles.highlight("#3b82f6")}>
+            Matheus Brehm e Joao Victor Carvalho
+          </span>
         </p>
         <p>
-          Projeto acadêmico com <span style={styles.highlight('#ec4899')}>React + TypeScript</span>
+          Projeto acadêmico com{" "}
+          <span style={styles.highlight("#ec4899")}>React + TypeScript</span>
         </p>
         <p>
-          Trilha sonora por <span style={styles.highlight('#facc15')}>Pixabay Audio</span>
+          Trilha sonora por{" "}
+          <span style={styles.highlight("#facc15")}>Pixabay Audio</span>
         </p>
         <p>
-          Gráficos e lógica: <span style={styles.highlight('#4ade80')}>100% customizados</span>
+          Gráficos e lógica:{" "}
+          <span style={styles.highlight("#4ade80")}>100% customizados</span>
         </p>
       </motion.div>
 
@@ -135,7 +151,7 @@ export default function Creditos({ voltar, tempoRestante, saltos, gameOver = fal
         animate={{ opacity: 1 }}
         transition={{ delay: 1.2 }}
       >
-        {gameOver ? '🚨 GAME OVER 🚨' : `🌟 Score final: ${score} pontos`}
+        {gameOver ? "🚨 GAME OVER 🚨" : `🌟 Score final: ${score} pontos`}
       </motion.p>
 
       <motion.button

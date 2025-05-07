@@ -1,12 +1,15 @@
-import { useState } from 'react';
-import Menu from './components/Menu';
-import Game from './components/Game';
-import Creditos from './components/Creditos';
-import './index.css';
+import { useState } from "react";
+import Menu from "./components/Menu";
+import Game from "./components/Game";
+import Creditos from "./components/Creditos";
+import "./index.css";
+import Demo from "./components/Demo";
 
 export default function App() {
-  const [estado, setEstado] = useState<'menu' | 'jogo' | 'creditos'>('menu');
-  const [dificuldade, setDificuldade] = useState<string>('Fácil');
+  const [tutorialAtivo, setTutorialAtivo] = useState(true);
+
+  const [estado, setEstado] = useState<"menu" | "jogo" | "creditos">("menu");
+  const [dificuldade, setDificuldade] = useState<string>("Fácil");
 
   const [tempoFinal, setTempoFinal] = useState<number>(0);
   const [saltosFinais, setSaltosFinais] = useState<number>(0);
@@ -14,33 +17,40 @@ export default function App() {
 
   const iniciarJogo = (nivel: string) => {
     setDificuldade(nivel);
-    setEstado('jogo');
+    setEstado("jogo");
   };
 
   const voltarAoMenu = () => {
-    setEstado('menu');
+    setEstado("menu");
   };
 
-  const finalizarJogo = (tempoRestante: number, saltos: number, gameOver: boolean) => {
+  const finalizarJogo = (
+    tempoRestante: number,
+    saltos: number,
+    gameOver: boolean
+  ) => {
     setTempoFinal(tempoRestante);
     setSaltosFinais(saltos);
     setFoiGameOver(gameOver);
-    setEstado('creditos');
+    setEstado("creditos");
   };
 
   return (
     <>
-      {estado === 'menu' && <Menu iniciarJogo={iniciarJogo} />}
+      {tutorialAtivo && (
+        <Demo onFim={() => setTutorialAtivo(false)} />
+      )}
+      {estado === "menu" && !tutorialAtivo &&<Menu iniciarJogo={iniciarJogo} />}
 
-      {estado === 'jogo' && (
+      {estado === "jogo" && !tutorialAtivo && (
         <Game
           dificuldade={dificuldade}
           voltarMenu={voltarAoMenu}
-          encerrar={finalizarJogo} 
+          encerrar={finalizarJogo}
         />
       )}
 
-      {estado === 'creditos' && (
+      {estado === "creditos" && !tutorialAtivo && (
         <Creditos
           voltar={voltarAoMenu}
           tempoRestante={tempoFinal}
