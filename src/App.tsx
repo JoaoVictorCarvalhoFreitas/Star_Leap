@@ -4,6 +4,7 @@ import Game from "./components/Game";
 import Creditos from "./components/Creditos";
 import "./index.css";
 import Demo from "./components/Demo";
+import { useEffect } from "react";
 
 export default function App() {
   const [tutorialAtivo, setTutorialAtivo] = useState(true);
@@ -37,10 +38,10 @@ export default function App() {
 
   return (
     <>
-      {tutorialAtivo && (
-        <Demo onFim={() => setTutorialAtivo(false)} />
+      {tutorialAtivo && <Demo onFim={() => setTutorialAtivo(false)} />}
+      {estado === "menu" && !tutorialAtivo && (
+        <Menu iniciarJogo={iniciarJogo} />
       )}
-      {estado === "menu" && !tutorialAtivo &&<Menu iniciarJogo={iniciarJogo} />}
 
       {estado === "jogo" && !tutorialAtivo && (
         <Game

@@ -47,14 +47,13 @@ export default function Demo({ onFim }: { onFim: () => void }) {
   //   };
   const mostraEspaco = () => {
     setEspaco(true);
-    setTimeout(() => {  
+    setTimeout(() => {
       setEspaco(false);
     }, 500);
   };
   const handleDisparo = () => {
-
     if (estado === "orbitando") {
-        mostraEspaco();
+      mostraEspaco();
       const planeta = fase[planetaAtual];
       console.log(planeta.x, planeta.y);
       const velocidade = 3.2;
@@ -135,11 +134,28 @@ export default function Demo({ onFim }: { onFim: () => void }) {
         overflow: "hidden",
       }}
     >
+      <div
+        style={{
+          position: "absolute",
+          top: "20px",
+          left: 0,
+          right: 0,
+          textAlign: "center",
+          color: "blue",
+          fontSize: "1.5rem",
+          fontWeight: 500,
+          zIndex: 20,
+          fontFamily: "sans-serif",
+        }}
+      >
+        Tente chegar no ate o fim do caminho mas cuidado para nao sair de orbita
+      </div>
+
       {espaco && (
         <div
           style={{
             position: "absolute",
-            top: "20px",
+            top: "50px",
             left: 0,
             right: 0,
             textAlign: "center",

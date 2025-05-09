@@ -191,7 +191,7 @@ const Game: React.FC<GameProps> = ({ dificuldade, voltarMenu, encerrar }) => {
             const novoAngulo = Math.atan2(novaY - p.y, novaX - p.x);
             setAngulo(novoAngulo);
             colidiu = true;
-            if (p.nome === "Zorion") {
+            if (p.nome === "Paraguai") {
               setVitoria(true);
             }
             break;
@@ -308,7 +308,7 @@ const Game: React.FC<GameProps> = ({ dificuldade, voltarMenu, encerrar }) => {
         </>
       )}
 
-      {mostrarCreditos && (
+      {mostrarCreditos  && (
         <Creditos
           voltar={() => {
             resetarAudioContext();
